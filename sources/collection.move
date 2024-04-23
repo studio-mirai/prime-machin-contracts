@@ -1,13 +1,9 @@
 module prime_machin::collection {
 
-    // === Imports ===
-
-    use sui::tx_context::{TxContext};
-    
     // === Friends ===
 
-    friend prime_machin::factory;
-    friend prime_machin::registry;
+    /* friend prime_machin::factory; */
+    /* friend prime_machin::registry; */
 
     // === Constants ===
 
@@ -15,8 +11,8 @@ module prime_machin::collection {
 
     // === Structs ===
 
-    struct COLLECTION has drop {}
-    
+    public struct COLLECTION has drop {}
+
     // === Init Function ===
 
     #[allow(unused_function)]
@@ -27,7 +23,7 @@ module prime_machin::collection {
 
     // == Public-Friend Functions ===
 
-    public(friend) fun size(): u16 {
+    public(package) fun size(): u16 {
         COLLECTION_SIZE
     }
 }

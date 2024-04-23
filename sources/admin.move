@@ -1,36 +1,29 @@
 module prime_machin::admin {
-
-    // === Imports ===
-
-    use sui::object::{Self, UID};
-    use sui::transfer::{Self};
-    use sui::tx_context::{Self, TxContext};
-
     // === Friends ===
 
-    friend prime_machin::attributes;
-    friend prime_machin::coloring;
-    friend prime_machin::image;
-    friend prime_machin::mint;
-    friend prime_machin::factory;
-    friend prime_machin::rarity;
-    friend prime_machin::receive;
-    friend prime_machin::registry;
+    /* friend prime_machin::attributes; */
+    /* friend prime_machin::coloring; */
+    /* friend prime_machin::image; */
+    /* friend prime_machin::mint; */
+    /* friend prime_machin::factory; */
+    /* friend prime_machin::rarity; */
+    /* friend prime_machin::receive; */
+    /* friend prime_machin::registry; */
 
     // === Errors ===
 
     const EAdminCapExpired: u64 = 1;
 
     // === Structs ===
-    
-    struct ADMIN has drop {}
 
-    struct AdminCap has key {
+    public struct ADMIN has drop {}
+
+    public struct AdminCap has key {
         id: UID,
         epoch: u64,
     }
 
-    struct SuperadminCap has key, store {
+    public struct SuperadminCap has key, store {
         id: UID,
     }
 
@@ -44,11 +37,11 @@ module prime_machin::admin {
         let superadmin_cap = SuperadminCap{
             id: object::new(ctx)
         };
-        
+
         let admin_cap = internal_create_admin_cap(ctx);
 
         transfer::transfer(superadmin_cap, @sm_treasury);
-        transfer::transfer(admin_cap, tx_context::sender(ctx));
+        transfer::transfer(admin_cap, ctx.sender());
     }
 
     // === Public-Mutative Functions ===
@@ -71,11 +64,11 @@ module prime_machin::admin {
 
     // === Public-Friend Functions ===
 
-    public(friend) fun verify_admin_cap(
+    public(package) fun verify_admin_cap(
         cap: &AdminCap,
         ctx: &TxContext,
     ) {
-        assert!(cap.epoch == tx_context::epoch(ctx), EAdminCapExpired);
+        assert!(cap.epoch == ctx.epoch(), EAdminCapExpired);
     }
 
     // === Private Functions ===
@@ -87,7 +80,7 @@ module prime_machin::admin {
             id: object::new(ctx),
             // Expiration epoch is current epoch + 2.
             // This means if current epoch is 350, expiration epoch would be the start of epoch 352.
-            epoch: tx_context::epoch(ctx),
+            epoch: ctx.epoch(),
         };
 
         admin_cap

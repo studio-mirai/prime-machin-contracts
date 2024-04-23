@@ -2,26 +2,23 @@ module prime_machin::coloring {
 
     // === Imports ===
 
-    use std::option::{Self, Option};
-    use std::string::{Self};
+    use std::string;
 
     use sui::coin::{Self, Coin};
-    use sui::display::{Self};
-    use sui::object::{Self, ID, UID};
-    use sui::package::{Self};
-    use sui::sui::{SUI};
+    use sui::display;
+    use sui::package;
+    use sui::sui::SUI;
+    use sui::transfer::Receiving;
     use sui::table::{Self, Table};
-    use sui::transfer::{Self, Receiving};
-    use sui::tx_context::{Self, TxContext};
-    
+
     use prime_machin::admin::{Self, AdminCap};
     use prime_machin::factory::{Self , PrimeMachin};
     use prime_machin::image::{Self, Image, DeleteImagePromise};
 
-    use koto::koto::{KOTO};
+    use koto::koto::KOTO;
 
     // === Errors ===
-    
+
     const EAlreadyLvl1Colored: u64 = 1;
     const EAlreadyLvl2Colored: u64 = 2;
     const ECapImageLevelMismatch: u64 = 3;
@@ -44,10 +41,10 @@ module prime_machin::coloring {
 
     // === Structs ===
 
-    struct COLORING has drop {}
+    public struct COLORING has drop {}
 
     /// An owned object issued to holders who purchase a coloring.
-    struct ColoringReceipt has key {
+    public struct ColoringReceipt has key {
         id: UID,
         number: u16,
         pfp_id: ID,
@@ -56,7 +53,7 @@ module prime_machin::coloring {
     }
 
     /// A shared object that stores settings related to coloring.
-    struct ColoringSettings has key {
+    public struct ColoringSettings has key {
         id: UID,
         lvl1_price_koto: u64,
         lvl1_price_sui: u64,
@@ -67,13 +64,13 @@ module prime_machin::coloring {
     /// A shared object that maps a Prime Machin's number to a
     /// coloring studio ID. This registry is used to ensure that only one
     /// coloring studio can exist for a Prime Machin at any given time.
-    struct ColoringStudioRegistry has key {
+    public struct ColoringStudioRegistry has key {
         id: UID,
         studios: Table<u16, ID>,
     }
 
     /// A shared object for fulfilling coloring orders.
-    struct ColoringStudio has key {
+    public struct ColoringStudio has key {
         id: UID,
         number: u16,
         // The coloring level. 1 is color, 2 is custom.
@@ -83,14 +80,14 @@ module prime_machin::coloring {
     }
 
     /// An owned object that lets the holder submit a coloring request.
-    struct ColoringTicket has key, store {
+    public struct ColoringTicket has key, store {
         id: UID,
         level: u8,
     }
 
     /// An owned object issued to ADMIN. Allows user to insert a finished
     /// image into a coloring studio.
-    struct FulfillColoringCap has key {
+    public struct FulfillColoringCap has key {
         id: UID,
         number: u16,
         level: u8,
@@ -107,7 +104,7 @@ module prime_machin::coloring {
     ) {
         let publisher = package::claim(otw, ctx);
 
-        let coloring_receipt_display = display::new<ColoringReceipt>(&publisher, ctx);
+        let mut coloring_receipt_display = display::new<ColoringReceipt>(&publisher, ctx);
         display::add(&mut coloring_receipt_display, string::utf8(b"name"), string::utf8(b"Prime Machin #{number} Coloring Receipt"));
         display::add(&mut coloring_receipt_display, string::utf8(b"description"), string::utf8(b"A receipt to claim a Level {level} coloring for Prime Machin #{number}."));
         display::add(&mut coloring_receipt_display, string::utf8(b"number"), string::utf8(b"{number}"));
@@ -115,21 +112,21 @@ module prime_machin::coloring {
         display::add(&mut coloring_receipt_display, string::utf8(b"level"), string::utf8(b"{level}"));
         display::add(&mut coloring_receipt_display, string::utf8(b"image_url"), string::utf8(b"https://prime.nozomi.world/images/coloring-receipt.webp"));
         display::update_version(&mut coloring_receipt_display);
-        transfer::public_transfer(coloring_receipt_display, tx_context::sender(ctx));
+        transfer::public_transfer(coloring_receipt_display, ctx.sender());
 
-        let coloring_ticket_display = display::new<ColoringTicket>(&publisher, ctx);
+        let mut coloring_ticket_display = display::new<ColoringTicket>(&publisher, ctx);
         display::add(&mut coloring_ticket_display, string::utf8(b"name"), string::utf8(b"Prime Machin Coloring Ticket (Level {level})"));
         display::add(&mut coloring_ticket_display, string::utf8(b"description"), string::utf8(b"A ticket that can be used to Level {level} color a Prime Machin."));
         display::add(&mut coloring_ticket_display, string::utf8(b"level"), string::utf8(b"{level}"));
         display::add(&mut coloring_ticket_display, string::utf8(b"image_url"), string::utf8(b"https://prime.nozomi.world/images/coloring-ticket-level-{level}.webp"));
         display::update_version(&mut coloring_ticket_display);
-        
+
 
         let registry = ColoringStudioRegistry {
             id: object::new(ctx),
             studios: table::new(ctx),
         };
-        
+
         let settings = ColoringSettings {
             id: object::new(ctx),
             lvl1_price_koto: DEFAULT_LVL1_COLORING_PRICE_KOTO,
@@ -137,7 +134,7 @@ module prime_machin::coloring {
             lvl1_price_sui: DEFAULT_LVL1_COLORING_PRICE_SUI,
             lvl2_price_sui: DEFAULT_LVL2_COLORING_PRICE_SUI,
         };
-        
+
         transfer::public_transfer(publisher, @sm_treasury);
         transfer::public_transfer(coloring_ticket_display, @sm_treasury);
 
@@ -181,12 +178,12 @@ module prime_machin::coloring {
     public fun claim_coloring(
         pfp: &mut PrimeMachin,
         receipt_to_receive: Receiving<ColoringReceipt>,
-        studio: ColoringStudio,
+        mut studio: ColoringStudio,
         registry: &mut ColoringStudioRegistry,
         ctx: &mut TxContext,
     ): (Image, DeleteImagePromise) {
         // Receive receipt and verify that the receipt's number matches the Prime Machin's number.
-        let receipt = transfer::receive(factory::uid_mut(pfp), receipt_to_receive); 
+        let receipt = transfer::receive(factory::uid_mut(pfp), receipt_to_receive);
         assert!(receipt.number == factory::number(pfp), EInvalidReceiptForPrimeMachin);
 
         // Verify the coloring has been fulfilled.
@@ -205,9 +202,9 @@ module prime_machin::coloring {
 
         // Set colored by address.
         if (studio.level == 1) {
-            factory::set_lvl1_colored_by_address(pfp, tx_context::sender(ctx));
+            factory::set_lvl1_colored_by_address(pfp, ctx.sender());
         } else if (studio.level == 2) {
-            factory::set_lvl2_colored_by_address(pfp, tx_context::sender(ctx));
+            factory::set_lvl2_colored_by_address(pfp, ctx.sender());
         };
 
         // Remove studio from the registry.
@@ -221,7 +218,7 @@ module prime_machin::coloring {
             studio_id: _,
             level: _,
         } = receipt;
-        
+
         object::delete(id);
 
         // Destroy studio.
@@ -246,7 +243,7 @@ module prime_machin::coloring {
         let ColoringTicket { id, level: _ } = ticket;
         object::delete(id);
     }
-    
+
     /// Request a coloring with a coloring ticket.
     public fun request_coloring(
         pfp: &PrimeMachin,
@@ -336,7 +333,7 @@ module prime_machin::coloring {
         } = cap;
         object::delete(id);
     }
-    
+
     public fun admin_issue_coloring_ticket(
         cap: &AdminCap,
         level: u8,

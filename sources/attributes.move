@@ -2,28 +2,25 @@ module prime_machin::attributes {
 
     // === Imports ===
 
-    use std::string::{String};
-
-    use sui::object::{Self, ID, UID};
-    use sui::tx_context::{TxContext};
+    use std::string::String;
 
     // === Friends ===
 
-    friend prime_machin::mint;
-    friend prime_machin::factory;
+    /* friend prime_machin::mint; */
+    /* friend prime_machin::factory; */
 
     // === Structs ===
-    
+
     /// An object that holds a `AttributesData` object,
     /// assigned to the "attributes" field of a `PrimeMachin` object.
-    struct Attributes has key, store {
+    public struct Attributes has key, store {
         id: UID,
         number: u16,
         data: AttributesData,
     }
 
     /// An object that holds a Prime Machin's attributes.
-    struct AttributesData has store {
+    public struct AttributesData has store {
         aura: String,
         background: String,
         clothing: String,
@@ -38,7 +35,7 @@ module prime_machin::attributes {
 
     /// A cap object that gives ADMIN the ability to create
     /// `Attributes` and `AttributesData` objects.
-    struct CreateAttributesCap has key, store {
+    public struct CreateAttributesCap has key, store {
         id: UID,
         number: u16,
     }
@@ -84,7 +81,7 @@ module prime_machin::attributes {
     }
 
     /// Create a `CreateAttributesCap`.
-    public(friend) fun issue_create_attributes_cap(
+    public(package) fun issue_create_attributes_cap(
         number: u16,
         ctx: &mut TxContext,
     ): CreateAttributesCap {
@@ -97,14 +94,14 @@ module prime_machin::attributes {
     }
 
     /// Returns the number of the `Attributes` object.
-    public(friend) fun number(
+    public(package) fun number(
         attributes: &Attributes,
     ): u16 {
         attributes.number
     }
 
     /// Returns the ID of the `CreateAttributesCap` object.
-    public(friend) fun create_attributes_cap_id(
+    public(package) fun create_attributes_cap_id(
         cap: &CreateAttributesCap,
     ): ID {
         object::id(cap)

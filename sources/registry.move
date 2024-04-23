@@ -2,31 +2,28 @@ module prime_machin::registry {
 
     // === Imports ===
 
-    use std::string::{Self};
+    use std::string;
 
-    use sui::display::{Self};
-    use sui::object::{Self, ID, UID};
-    use sui::package::{Self};
+    use sui::display;
+    use sui::package;
     use sui::table::{Self, Table};
-    use sui::transfer::{Self};
-    use sui::tx_context::{Self, TxContext};
 
     use prime_machin::admin::{Self, AdminCap};
-    use prime_machin::collection::{Self};
+    use prime_machin::collection;
 
     // === Friends ===
 
-    friend prime_machin::factory;
+    /* friend prime_machin::factory; */
 
-    struct REGISTRY has drop {}
+    public struct REGISTRY has drop {}
 
     /// Stores a Prime Machin number: to ID mapping.
-    /// 
+    ///
     /// This object is used to maintain a stable mapping between a Prime Machin's
     /// number: and its object ID. When the contract is deployed, `is_initialized` is set to false.
     /// Once ADMIN initializes the registry with 3,333 Prime Machin, `is_initialized` will be set to
     /// true. At this point, the registry should be transformed into an immutable object.
-    struct Registry has key {
+    public struct Registry has key {
         id: UID,
         pfps: Table<u16, ID>,
         is_initialized: bool,
@@ -56,7 +53,7 @@ module prime_machin::registry {
             is_frozen: false,
         };
 
-        let registry_display = display::new<Registry>(&publisher, ctx);
+        let mut registry_display = display::new<Registry>(&publisher, ctx);
         display::add(&mut registry_display, string::utf8(b"name"), string::utf8(b"Prime Machin Registry"));
         display::add(&mut registry_display, string::utf8(b"description"), string::utf8(b"The official registry of the Prime Machin collection by Studio Mirai."));
         display::add(&mut registry_display, string::utf8(b"image_url"), string::utf8(b"https://prime.nozomi.world/images/registry.webp."));
@@ -82,7 +79,7 @@ module prime_machin::registry {
 
     // === Public-Friend Functions ===
 
-    public(friend) fun add(
+    public(package) fun add(
         number: u16,
         pfp_id: ID,
         registry: &mut Registry,
@@ -94,13 +91,13 @@ module prime_machin::registry {
         };
     }
 
-    public(friend) fun is_frozen(
+    public(package) fun is_frozen(
         registry: &Registry,
     ): bool {
         registry.is_frozen
     }
 
-    public(friend) fun is_initialized(
+    public(package) fun is_initialized(
         registry: &Registry,
     ): bool {
         registry.is_initialized
@@ -111,7 +108,7 @@ module prime_machin::registry {
     #[lint_allow(freeze_wrapped)]
     public fun admin_freeze_registry(
         cap: &AdminCap,
-        registry: Registry,
+        mut registry: Registry,
         ctx: &TxContext,
     ) {
         admin::verify_admin_cap(cap, ctx);

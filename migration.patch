@@ -1,0 +1,396 @@
+--- ./sources/admin.move
++++ ./sources/admin.move
+@@ -11,8 +11,8 @@
+-    friend prime_machin::attributes;
+-    friend prime_machin::coloring;
+-    friend prime_machin::image;
+-    friend prime_machin::mint;
+-    friend prime_machin::factory;
+-    friend prime_machin::rarity;
+-    friend prime_machin::receive;
+-    friend prime_machin::registry;
++    /* friend prime_machin::attributes; */
++    /* friend prime_machin::coloring; */
++    /* friend prime_machin::image; */
++    /* friend prime_machin::mint; */
++    /* friend prime_machin::factory; */
++    /* friend prime_machin::rarity; */
++    /* friend prime_machin::receive; */
++    /* friend prime_machin::registry; */
+@@ -26 +26 @@
+-    struct ADMIN has drop {}
++    public struct ADMIN has drop {}
+@@ -28 +28 @@
+-    struct AdminCap has key {
++    public struct AdminCap has key {
+@@ -33 +33 @@
+-    struct SuperadminCap has key, store {
++    public struct SuperadminCap has key, store {
+@@ -74 +74 @@
+-    public(friend) fun verify_admin_cap(
++    public(package) fun verify_admin_cap(
+--- ./sources/attributes.move
++++ ./sources/attributes.move
+@@ -12,2 +12,2 @@
+-    friend prime_machin::mint;
+-    friend prime_machin::factory;
++    /* friend prime_machin::mint; */
++    /* friend prime_machin::factory; */
+@@ -19 +19 @@
+-    struct Attributes has key, store {
++    public struct Attributes has key, store {
+@@ -26 +26 @@
+-    struct AttributesData has store {
++    public struct AttributesData has store {
+@@ -41 +41 @@
+-    struct CreateAttributesCap has key, store {
++    public struct CreateAttributesCap has key, store {
+@@ -87 +87 @@
+-    public(friend) fun issue_create_attributes_cap(
++    public(package) fun issue_create_attributes_cap(
+@@ -100 +100 @@
+-    public(friend) fun number(
++    public(package) fun number(
+@@ -107 +107 @@
+-    public(friend) fun create_attributes_cap_id(
++    public(package) fun create_attributes_cap_id(
+--- ./sources/collection.move
++++ ./sources/collection.move
+@@ -9,2 +9,2 @@
+-    friend prime_machin::factory;
+-    friend prime_machin::registry;
++    /* friend prime_machin::factory; */
++    /* friend prime_machin::registry; */
+@@ -18 +18 @@
+-    struct COLLECTION has drop {}
++    public struct COLLECTION has drop {}
+@@ -30 +30 @@
+-    public(friend) fun size(): u16 {
++    public(package) fun size(): u16 {
+--- ./sources/coloring.move
++++ ./sources/coloring.move
+@@ -47 +47 @@
+-    struct COLORING has drop {}
++    public struct COLORING has drop {}
+@@ -50 +50 @@
+-    struct ColoringReceipt has key {
++    public struct ColoringReceipt has key {
+@@ -59 +59 @@
+-    struct ColoringSettings has key {
++    public struct ColoringSettings has key {
+@@ -70 +70 @@
+-    struct ColoringStudioRegistry has key {
++    public struct ColoringStudioRegistry has key {
+@@ -76 +76 @@
+-    struct ColoringStudio has key {
++    public struct ColoringStudio has key {
+@@ -86 +86 @@
+-    struct ColoringTicket has key, store {
++    public struct ColoringTicket has key, store {
+@@ -93 +93 @@
+-    struct FulfillColoringCap has key {
++    public struct FulfillColoringCap has key {
+@@ -110 +110 @@
+-        let coloring_receipt_display = display::new<ColoringReceipt>(&publisher, ctx);
++        let mut coloring_receipt_display = display::new<ColoringReceipt>(&publisher, ctx);
+@@ -120 +120 @@
+-        let coloring_ticket_display = display::new<ColoringTicket>(&publisher, ctx);
++        let mut coloring_ticket_display = display::new<ColoringTicket>(&publisher, ctx);
+@@ -184 +184 @@
+-        studio: ColoringStudio,
++        mut studio: ColoringStudio,
+--- ./sources/factory.move
++++ ./sources/factory.move
+@@ -28,3 +28,3 @@
+-    friend prime_machin::coloring;
+-    friend prime_machin::mint;
+-    friend prime_machin::receive;
++    /* friend prime_machin::coloring; */
++    /* friend prime_machin::mint; */
++    /* friend prime_machin::receive; */
+@@ -46 +46 @@
+-    struct FACTORY has drop {}
++    public struct FACTORY has drop {}
+@@ -48 +48 @@
+-    struct PrimeMachin has key, store {
++    public struct PrimeMachin has key, store {
+@@ -63 +63 @@
+-    struct Factory has key {
++    public struct Factory has key {
+@@ -84 +84 @@
+-        let display = display::new<PrimeMachin>(&publisher, ctx);
++        let mut display = display::new<PrimeMachin>(&publisher, ctx);
+@@ -141 +141 @@
+-        let number = (object_table::length(&factory.pfps) as u16) + 1;
++        let mut number = (object_table::length(&factory.pfps) as u16) + 1;
+@@ -146 +146 @@
+-            let (kiosk, kiosk_owner_cap) = kiosk::new(ctx);
++            let (mut kiosk, kiosk_owner_cap) = kiosk::new(ctx);
+@@ -184 +184 @@
+-        numbers: vector<u16>,
++        mut numbers: vector<u16>,
+@@ -192 +192 @@
+-        let pfps = vector::empty<PrimeMachin>();
++        let mut pfps = vector::empty<PrimeMachin>();
+@@ -205 +205 @@
+-    public(friend) fun id(
++    public(package) fun id(
+@@ -211 +211 @@
+-    public(friend) fun uid_mut(
++    public(package) fun uid_mut(
+@@ -217 +217 @@
+-    public(friend) fun number(
++    public(package) fun number(
+@@ -223 +223 @@
+-    public(friend) fun image(
++    public(package) fun image(
+@@ -229 +229 @@
+-    public(friend) fun kiosk_id(
++    public(package) fun kiosk_id(
+@@ -235 +235 @@
+-    public(friend) fun kiosk_owner_cap_id(
++    public(package) fun kiosk_owner_cap_id(
+@@ -241 +241 @@
+-    public(friend) fun lvl1_colored_by(
++    public(package) fun lvl1_colored_by(
+@@ -247 +247 @@
+-    public(friend) fun lvl2_colored_by(
++    public(package) fun lvl2_colored_by(
+@@ -253 +253 @@
+-    public(friend) fun set_attributes(
++    public(package) fun set_attributes(
+@@ -261 +261 @@
+-    public(friend) fun set_image(
++    public(package) fun set_image(
+@@ -269 +269 @@
+-    public(friend) fun unset_image(
++    public(package) fun unset_image(
+@@ -276 +276 @@
+-    public(friend) fun set_lvl1_colored_by_address(
++    public(package) fun set_lvl1_colored_by_address(
+@@ -283 +283 @@
+-    public(friend) fun set_lvl2_colored_by_address(
++    public(package) fun set_lvl2_colored_by_address(
+@@ -290 +290 @@
+-    public(friend) fun set_minted_by_address(
++    public(package) fun set_minted_by_address(
+@@ -297 +297 @@
+-    public(friend) fun set_rarity(
++    public(package) fun set_rarity(
+@@ -305 +305 @@
+-    public(friend) fun swap_image(
++    public(package) fun swap_image(
+--- ./sources/image.move
++++ ./sources/image.move
+@@ -23,3 +23,3 @@
+-    friend prime_machin::coloring;
+-    friend prime_machin::mint;
+-    friend prime_machin::factory;
++    /* friend prime_machin::coloring; */
++    /* friend prime_machin::mint; */
++    /* friend prime_machin::factory; */
+@@ -37 +37 @@
+-    struct IMAGE has drop {}
++    public struct IMAGE has drop {}
+@@ -39 +39 @@
+-    struct CreateImageCap has key, store {
++    public struct CreateImageCap has key, store {
+@@ -46 +46 @@
+-    struct CreateImageChunkCap has key {
++    public struct CreateImageChunkCap has key {
+@@ -55 +55 @@
+-    struct DeleteImagePromise {
++    public struct DeleteImagePromise {
+@@ -59 +59 @@
+-    struct Image has key, store {
++    public struct Image has key, store {
+@@ -74 +74 @@
+-    struct ImageChunk has key {
++    public struct ImageChunk has key {
+@@ -87 +87 @@
+-    struct RegisterImageChunkCap has key {
++    public struct RegisterImageChunkCap has key {
+@@ -98 +98 @@
+-    struct CreateImageCapCreatedEvent has copy, drop {
++    public struct CreateImageCapCreatedEvent has copy, drop {
+@@ -104 +104 @@
+-    struct CreateImageChunkCapCreatedEvent has copy, drop {
++    public struct CreateImageChunkCapCreatedEvent has copy, drop {
+@@ -113 +113 @@
+-    struct ImageCreatedEvent has copy, drop {
++    public struct ImageCreatedEvent has copy, drop {
+@@ -119 +119 @@
+-    struct ImageChunkCreatedEvent has copy, drop {
++    public struct ImageChunkCreatedEvent has copy, drop {
+@@ -136 +136 @@
+-        let image_chunk_display = display::new<ImageChunk>(&publisher, ctx);
++        let mut image_chunk_display = display::new<ImageChunk>(&publisher, ctx);
+@@ -153 +153 @@
+-        image_chunk_hashes: vector<String>,
++        mut image_chunk_hashes: vector<String>,
+@@ -156 +156 @@
+-        let image = Image {
++        let mut image = Image {
+@@ -168 +168 @@
+-        let create_image_chunk_cap_ids = vec_set::empty<ID>();
++        let mut create_image_chunk_cap_ids = vec_set::empty<ID>();
+@@ -224 +224 @@
+-        data: vector<String>,
++        mut data: vector<String>,
+@@ -228 +228 @@
+-        let concat_chunk_str = string::utf8(b"");
++        let mut concat_chunk_str = string::utf8(b"");
+@@ -290 +290 @@
+-    public(friend) fun issue_create_image_cap(
++    public(package) fun issue_create_image_cap(
+@@ -395 +395 @@
+-    public(friend) fun issue_delete_image_promise(
++    public(package) fun issue_delete_image_promise(
+@@ -405 +405 @@
+-    public(friend) fun verify_image_chunks_registered(
++    public(package) fun verify_image_chunks_registered(
+@@ -408 +408 @@
+-        let chunk_keys = vec_map::keys(&image.chunks);
++        let mut chunk_keys = vec_map::keys(&image.chunks);
+@@ -420 +420 @@
+-    public(friend) fun id(
++    public(package) fun id(
+@@ -427 +427 @@
+-    public(friend) fun number(
++    public(package) fun number(
+@@ -434 +434 @@
+-    public(friend) fun level(
++    public(package) fun level(
+@@ -441 +441 @@
+-    public(friend) fun create_image_cap_id(
++    public(package) fun create_image_cap_id(
+--- ./sources/mint.move
++++ ./sources/mint.move
+@@ -62 +62 @@
+-    struct MINT has drop {}
++    public struct MINT has drop {}
+@@ -64 +64 @@
+-    struct DestroyMintReceiptCap has key {
++    public struct DestroyMintReceiptCap has key {
+@@ -69 +69 @@
+-    struct MigrationTicket has key, store {
++    public struct MigrationTicket has key, store {
+@@ -74 +74 @@
+-    struct MigrationWarehouse has key {
++    public struct MigrationWarehouse has key {
+@@ -80 +80 @@
+-    struct Mint has key {
++    public struct Mint has key {
+@@ -90 +90 @@
+-    struct MintReceipt has key {
++    public struct MintReceipt has key {
+@@ -96 +96 @@
+-    struct MintSettings has key {
++    public struct MintSettings has key {
+@@ -103 +103 @@
+-    struct MintWarehouse has key {
++    public struct MintWarehouse has key {
+@@ -109 +109 @@
+-    struct RevealMintCap has key {
++    public struct RevealMintCap has key {
+@@ -119 +119 @@
+-    struct WhitelistTicket has key {
++    public struct WhitelistTicket has key {
+@@ -126 +126 @@
+-    struct MintClaimedEvent has copy, drop {
++    public struct MintClaimedEvent has copy, drop {
+@@ -133 +133 @@
+-    struct MintEvent has copy, drop {
++    public struct MintEvent has copy, drop {
+@@ -149 +149 @@
+-        let migration_ticket_display = display::new<MigrationTicket>(&publisher, ctx);
++        let mut migration_ticket_display = display::new<MigrationTicket>(&publisher, ctx);
+@@ -157 +157 @@
+-        let mint_receipt_display = display::new<MintReceipt>(&publisher, ctx);
++        let mut mint_receipt_display = display::new<MintReceipt>(&publisher, ctx);
+@@ -166 +166 @@
+-        let wl_ticket_display = display::new<WhitelistTicket>(&publisher, ctx);
++        let mut wl_ticket_display = display::new<WhitelistTicket>(&publisher, ctx);
+@@ -204 +204 @@
+-        mint: Mint,
++        mut mint: Mint,
+@@ -334 +334 @@
+-        pfps: vector<PrimeMachin>,
++        mut pfps: vector<PrimeMachin>,
+@@ -357 +357 @@
+-        pfps: vector<PrimeMachin>,
++        mut pfps: vector<PrimeMachin>,
+@@ -496 +496 @@
+-        mint: Mint,
++        mut mint: Mint,
+@@ -559 +559 @@
+-        pfp: PrimeMachin,
++        mut pfp: PrimeMachin,
+@@ -563 +563 @@
+-        let mint = Mint {
++        let mut mint = Mint {
+--- ./sources/rarity.move
++++ ./sources/rarity.move
+@@ -12,2 +12,2 @@
+-    friend prime_machin::mint;
+-    friend prime_machin::factory;
++    /* friend prime_machin::mint; */
++    /* friend prime_machin::factory; */
+@@ -19 +19 @@
+-    struct Rarity has key, store {
++    public struct Rarity has key, store {
+@@ -26 +26 @@
+-    struct RarityData has store {
++    public struct RarityData has store {
+@@ -34 +34 @@
+-    struct CreateRarityCap has key, store {
++    public struct CreateRarityCap has key, store {
+@@ -66 +66 @@
+-    public(friend) fun issue_create_rarity_cap(
++    public(package) fun issue_create_rarity_cap(
+@@ -79 +79 @@
+-    public(friend) fun number(
++    public(package) fun number(
+@@ -86 +86 @@
+-    public(friend) fun create_rarity_cap_id(
++    public(package) fun create_rarity_cap_id(
+--- ./sources/receive.move
++++ ./sources/receive.move
+@@ -34 +34 @@
+-    struct RECEIVE has drop {}
++    public struct RECEIVE has drop {}
+@@ -36 +36 @@
+-    struct ReceiveSettings has key {
++    public struct ReceiveSettings has key {
+@@ -44 +44 @@
+-    struct ReturnKioskOwnerCapPromise {
++    public struct ReturnKioskOwnerCapPromise {
+@@ -51 +51 @@
+-    struct ObjectReceivedEvent has copy, drop {
++    public struct ObjectReceivedEvent has copy, drop {
+--- ./sources/registry.move
++++ ./sources/registry.move
+@@ -19 +19 @@
+-    friend prime_machin::factory;
++    /* friend prime_machin::factory; */
+@@ -21 +21 @@
+-    struct REGISTRY has drop {}
++    public struct REGISTRY has drop {}
+@@ -29 +29 @@
+-    struct Registry has key {
++    public struct Registry has key {
+@@ -59 +59 @@
+-        let registry_display = display::new<Registry>(&publisher, ctx);
++        let mut registry_display = display::new<Registry>(&publisher, ctx);
+@@ -85 +85 @@
+-    public(friend) fun add(
++    public(package) fun add(
+@@ -97 +97 @@
+-    public(friend) fun is_frozen(
++    public(package) fun is_frozen(
+@@ -103 +103 @@
+-    public(friend) fun is_initialized(
++    public(package) fun is_initialized(
+@@ -114 +114 @@
+-        registry: Registry,
++        mut registry: Registry,

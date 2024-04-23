@@ -1,5 +1,5 @@
 module prime_machin::receive {
-    
+
     // === Imports ===
 
     use std::type_name::{Self, TypeName};
@@ -7,33 +7,31 @@ module prime_machin::receive {
     use sui::coin::{Self, Coin};
     use sui::event;
     use sui::kiosk::{KioskOwnerCap};
-    use sui::object::{Self, ID, UID};
-    use sui::transfer::{Self, Receiving};
-    use sui::tx_context::{TxContext};
+    use sui::transfer::Receiving;
 
     use prime_machin::admin::{Self, AdminCap};
     use prime_machin::coloring::{ColoringReceipt};
     use prime_machin::factory::{Self , PrimeMachin};
     use prime_machin::image::{ImageChunk, RegisterImageChunkCap};
 
-    use koto::koto::{KOTO};
-    
+    use koto::koto::KOTO;
+
     // === Errors ===
 
     const EIncorrectKotoFeeAmount: u64 = 1;
     const EInvalidReceiveType: u64 = 2;
     const EInvalidKioskOwnerCapForPromise: u64 = 3;
     const EInvalidKioskOwnerCapForPrimeMachin: u64 = 4;
-    
+
     // === Constants ===
 
     const DEFAULT_RECEIVE_FEE: u64 = 100; // 100 KOTO
 
     // === Structs ===
 
-    struct RECEIVE has drop {}
+    public struct RECEIVE has drop {}
 
-    struct ReceiveSettings has key {
+    public struct ReceiveSettings has key {
         id: UID,
         // KOTO fee for receiving an object.
         fee: u64,
@@ -41,14 +39,14 @@ module prime_machin::receive {
 
     /// A hot potato struct that forces the caller to return the KioskOwnerCap back
     /// to the Prime Machin before completing a PTB.
-    struct ReturnKioskOwnerCapPromise {
+    public struct ReturnKioskOwnerCapPromise {
         pfp_id: ID,
         kiosk_owner_cap_id: ID,
     }
 
     // === Events ===
 
-    struct ObjectReceivedEvent has copy, drop {
+    public struct ObjectReceivedEvent has copy, drop {
         pfp_id: ID,
         received_object_id: ID,
         received_object_type: TypeName,
@@ -80,19 +78,19 @@ module prime_machin::receive {
         assert!(type_name::get<T>() != type_name::get<KOTO>(), EInvalidReceiveType);
         assert!(type_name::get<T>() != type_name::get<ImageChunk>(), EInvalidReceiveType);
         assert!(type_name::get<T>() != type_name::get<RegisterImageChunkCap>(), EInvalidReceiveType);
-        
+
         // Assert KOTO fee is the correct amount.
         assert!(coin::value(&fee) == settings.fee, EIncorrectKotoFeeAmount);
-        
+
         // Transfer the fee to SM.
         transfer::public_transfer(fee, @sm_treasury);
-        
+
         // Receive the object.
-        let received_object = transfer::public_receive(factory::uid_mut(pfp), obj_to_receive);
+        let received_object = transfer::public_receive(pfp.uid_mut(), obj_to_receive);
 
         event::emit(
             ObjectReceivedEvent {
-                pfp_id: factory::id(pfp),
+                pfp_id: pfp.id(),
                 received_object_id: object::id(&received_object),
                 received_object_type: type_name::get<T>(),
             }
@@ -107,24 +105,24 @@ module prime_machin::receive {
         pfp: &mut PrimeMachin,
         koto_to_receive: Receiving<Coin<KOTO>>,
     ): Coin<KOTO> {
-        transfer::public_receive(factory::uid_mut(pfp), koto_to_receive)
+        transfer::public_receive(pfp.uid_mut(), koto_to_receive)
     }
 
     /// A function for receiving the Prime Machin's KioskOwnerCap.
     /// This function returns the KioskOwnerCap as well as a ReturnKioskOwnerCapPromise
     /// to return it back to the Prime Machin. In order for a PTB to execute successfully,
-    /// the KioskOwnerCap and ReturnKioskOwnerCapPromise must be passed to return_kiosk_owner_cap(). 
+    /// the KioskOwnerCap and ReturnKioskOwnerCapPromise must be passed to return_kiosk_owner_cap().
     public fun receive_kiosk_owner_cap(
         pfp: &mut PrimeMachin,
         kiosk_owner_cap_to_receive: Receiving<KioskOwnerCap>,
     ): (KioskOwnerCap, ReturnKioskOwnerCapPromise) {
         // Assert the KioskOwnerCap to receive matches the KioskOwnerCap assigned to the Prime Machin.
-        assert!(transfer::receiving_object_id(&kiosk_owner_cap_to_receive) == factory::kiosk_owner_cap_id(pfp), EInvalidKioskOwnerCapForPrimeMachin);
+        assert!(transfer::receiving_object_id(&kiosk_owner_cap_to_receive) == pfp.kiosk_owner_cap_id(), EInvalidKioskOwnerCapForPrimeMachin);
 
-        let kiosk_owner_cap = transfer::public_receive(factory::uid_mut(pfp), kiosk_owner_cap_to_receive);
-        
+        let kiosk_owner_cap = transfer::public_receive(pfp.uid_mut(), kiosk_owner_cap_to_receive);
+
         let promise = ReturnKioskOwnerCapPromise {
-            pfp_id: factory::id(pfp),
+            pfp_id: pfp.id(),
             kiosk_owner_cap_id: object::id(&kiosk_owner_cap),
         };
 
@@ -137,7 +135,7 @@ module prime_machin::receive {
         promise: ReturnKioskOwnerCapPromise,
     ) {
         assert!(promise.kiosk_owner_cap_id == object::id(&kiosk_owner_cap), EInvalidKioskOwnerCapForPromise);
-        transfer::public_transfer(kiosk_owner_cap, object::id_to_address(&promise.pfp_id));
+        transfer::public_transfer(kiosk_owner_cap, promise.pfp_id.to_address());
 
         let ReturnKioskOwnerCapPromise { pfp_id: _, kiosk_owner_cap_id: _ } = promise;
     }
@@ -151,8 +149,8 @@ module prime_machin::receive {
         amount: u64,
         ctx: &TxContext,
     ) {
-        admin::verify_admin_cap(cap, ctx);
-        
+        cap.verify_admin_cap(ctx);
+
         settings.fee= amount
     }
 }

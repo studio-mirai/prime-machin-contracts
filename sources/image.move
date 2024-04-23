@@ -2,27 +2,23 @@ module prime_machin::image {
 
     // === Imports ===
 
-    use std::hash::{Self};
-    use std::option::{Self, Option};
+    use std::hash;
     use std::string::{Self, String};
-    use std::vector::{Self};
 
-    use sui::display::{Self};
-    use sui::dynamic_field::{Self};
+    use sui::display;
+    use sui::dynamic_field;
     use sui::event;
-    use sui::hex::{Self};
-    use sui::object::{Self, ID, UID};
-    use sui::package::{Self};
-    use sui::transfer::{Self, Receiving};
-    use sui::tx_context::{TxContext};
+    use sui::hex;
+    use sui::package;
+    use sui::transfer::Receiving;
     use sui::vec_map::{Self, VecMap};
     use sui::vec_set::{Self, VecSet};
-    
+
     // === Friends ===
 
-    friend prime_machin::coloring;
-    friend prime_machin::mint;
-    friend prime_machin::factory;
+    /* friend prime_machin::coloring; */
+    /* friend prime_machin::mint; */
+    /* friend prime_machin::factory; */
 
     // === Errors ===
 
@@ -34,16 +30,16 @@ module prime_machin::image {
 
     // === Structs ===
 
-    struct IMAGE has drop {}
+    public struct IMAGE has drop {}
 
-    struct CreateImageCap has key, store {
+    public struct CreateImageCap has key, store {
         id: UID,
         number: u16,
         level: u8,
         ref: ID,
     }
 
-    struct CreateImageChunkCap has key {
+    public struct CreateImageChunkCap has key {
         id: UID,
         number: u16,
         level: u8,
@@ -52,11 +48,11 @@ module prime_machin::image {
         image_id: ID,
     }
 
-    struct DeleteImagePromise {
+    public struct DeleteImagePromise {
         image_id: ID,
     }
 
-    struct Image has key, store {
+    public struct Image has key, store {
         id: UID,
         number: u16,
         // Level of the image. 0 is black and white, 1 is color, 2 is custom.
@@ -71,7 +67,7 @@ module prime_machin::image {
         chunks: VecMap<String, Option<ID>>,
     }
 
-    struct ImageChunk has key {
+    public struct ImageChunk has key {
         id: UID,
         // ID of the parent image.
         image_id: ID,
@@ -84,7 +80,7 @@ module prime_machin::image {
         data: String,
     }
 
-    struct RegisterImageChunkCap has key {
+    public struct RegisterImageChunkCap has key {
         id: UID,
         image_id: ID,
         chunk_id: ID,
@@ -95,13 +91,13 @@ module prime_machin::image {
 
     // === Events ===
 
-    struct CreateImageCapCreatedEvent has copy, drop {
+    public struct CreateImageCapCreatedEvent has copy, drop {
         id: ID,
         number: u16,
         level: u8,
     }
 
-    struct CreateImageChunkCapCreatedEvent has copy, drop {
+    public struct CreateImageChunkCapCreatedEvent has copy, drop {
         id: ID,
         number: u16,
         level: u8,
@@ -110,13 +106,13 @@ module prime_machin::image {
         image_id: ID,
     }
 
-    struct ImageCreatedEvent has copy, drop {
+    public struct ImageCreatedEvent has copy, drop {
         id: ID,
         number: u16,
         level: u8,
     }
 
-    struct ImageChunkCreatedEvent has copy, drop {
+    public struct ImageChunkCreatedEvent has copy, drop {
         id: ID,
         number: u16,
         hash: String,
@@ -133,15 +129,15 @@ module prime_machin::image {
     ) {
         let publisher = package::claim(otw, ctx);
 
-        let image_chunk_display = display::new<ImageChunk>(&publisher, ctx);
-        display::add(&mut image_chunk_display, string::utf8(b"name"), string::utf8(b"Prime Machin #{number} Image Chunk"));
-        display::add(&mut image_chunk_display, string::utf8(b"description"), string::utf8(b"An image chunk for Prime Machin #{number}."));
-        display::add(&mut image_chunk_display, string::utf8(b"image_url"), string::utf8(b"https://prime.nozomi.world/images/image_chunk_{level}_{number}_{index}.webp"));
-        display::add(&mut image_chunk_display, string::utf8(b"image_id"), string::utf8(b"{image_id}"));
-        display::add(&mut image_chunk_display, string::utf8(b"number"), string::utf8(b"{number}"));
-        display::add(&mut image_chunk_display, string::utf8(b"hash"), string::utf8(b"{hash}"));
-        display::add(&mut image_chunk_display, string::utf8(b"index"), string::utf8(b"{index}"));
-        display::add(&mut image_chunk_display, string::utf8(b"data"), string::utf8(b"{data}"));
+        let mut image_chunk_display = display::new<ImageChunk>(&publisher, ctx);
+        image_chunk_display.add(b"name".to_string(), b"Prime Machin #{number} Image Chunk".to_string());
+        image_chunk_display.add(b"description".to_string(), b"An image chunk for Prime Machin #{number}.".to_string());
+        image_chunk_display.add(b"image_url".to_string(), b"https://prime.nozomi.world/images/image_chunk_{level}_{number}_{index}.webp".to_string());
+        image_chunk_display.add(b"image_id".to_string(), b"{image_id}".to_string());
+        image_chunk_display.add(b"number".to_string(), b"{number}".to_string());
+        image_chunk_display.add(b"hash".to_string(), b"{hash}".to_string());
+        image_chunk_display.add(b"index".to_string(), b"{index}".to_string());
+        image_chunk_display.add(b"data".to_string(), b"{data}".to_string());
 
         transfer::public_transfer(publisher, @sm_treasury);
         transfer::public_transfer(image_chunk_display, @sm_treasury);
@@ -150,10 +146,10 @@ module prime_machin::image {
     #[allow(lint(self_transfer))]
     public fun create_image(
         cap: CreateImageCap,
-        image_chunk_hashes: vector<String>,
+        mut image_chunk_hashes: vector<String>,
         ctx: &mut TxContext,
     ) {
-        let image = Image {
+        let mut image = Image {
             id: object::new(ctx),
             number: cap.number,
             level: cap.level,
@@ -165,13 +161,13 @@ module prime_machin::image {
         };
 
         // let create_image_chunk_cap_ids = vector::empty<ID>();
-        let create_image_chunk_cap_ids = vec_set::empty<ID>();
+        let mut create_image_chunk_cap_ids = vec_set::empty<ID>();
 
         // Initialize the chunks VecMap with expected chunk hashes as keys.
         while (!vector::is_empty(&image_chunk_hashes)) {
             let chunk_index = (vector::length(&image_chunk_hashes) as u8);
             let chunk_hash = vector::pop_back(&mut image_chunk_hashes);
-            
+
             let create_image_chunk_cap = CreateImageChunkCap {
                 id: object::new(ctx),
                 number: cap.number,
@@ -214,19 +210,19 @@ module prime_machin::image {
         );
 
         let CreateImageCap { id, number: _, level: _, ref: _ } = cap;
-        object::delete(id);
+        id.delete();
 
         transfer::transfer(image, @sm_api);
     }
 
     public fun create_and_transfer_image_chunk(
         cap: CreateImageChunkCap,
-        data: vector<String>,
+        mut data: vector<String>,
         ctx: &mut TxContext,
     ) {
         // Create an empty string.
-        let concat_chunk_str = string::utf8(b"");
-        
+        let mut concat_chunk_str = string::utf8(b"");
+
         // Loop through data, remove each string, and append it to the concatenated string.
         while (!vector::is_empty(&data)) {
             // Remove the first string in the vector.
@@ -273,8 +269,8 @@ module prime_machin::image {
         );
 
         // Transfer chunk to the image directly.
-        transfer::transfer(chunk, object::id_to_address(&cap.image_id));
-        transfer::transfer(register_image_chunk_cap, object::id_to_address(&cap.image_id));
+        transfer::transfer(chunk, cap.image_id.to_address());
+        transfer::transfer(register_image_chunk_cap, cap.image_id.to_address());
 
         let CreateImageChunkCap {
             id,
@@ -284,10 +280,10 @@ module prime_machin::image {
             hash: _,
             image_id: _,
         } = cap;
-        object::delete(id);
+        id.delete();
     }
 
-    public(friend) fun issue_create_image_cap(
+    public(package) fun issue_create_image_cap(
         number: u16,
         level: u8,
         ref: ID,
@@ -316,7 +312,7 @@ module prime_machin::image {
         promise: DeleteImagePromise,
     ) {
         assert!(object::id(&image) == promise.image_id, EImagePromiseMismatch);
-        assert!(vec_map::is_empty(&image.chunks), EImageChunksNotDeleted);
+        assert!(image.chunks.is_empty(), EImageChunksNotDeleted);
 
         let Image {
             id,
@@ -332,8 +328,8 @@ module prime_machin::image {
         // This will abort if the image chunks linked table is not empty.
         // We designed it this way to ensure there are no orphaned chunk objects
         // as a result of destroying the parent image object.
-        vec_map::destroy_empty(chunks);
-        object::delete(id);
+        chunks.destroy_empty();
+        id.delete();
 
         let DeleteImagePromise { image_id: _ } = promise;
     }
@@ -345,20 +341,20 @@ module prime_machin::image {
         let cap = transfer::receive(&mut image.id, cap_to_receive);
         assert!(cap.image_id == object::id(image), EWrongImageForChunk);
 
-        let chunk_opt = vec_map::get_mut(&mut image.chunks, &cap.chunk_hash);
-        option::fill(chunk_opt, cap.chunk_id);
+        let chunk_opt = &mut image.chunks[&cap.chunk_hash];
+        chunk_opt.fill(cap.chunk_id);
 
         // Borrow a mutable reference to the image's "create_image_chunk_cap_ids" dynamic field.
-        let create_image_chunk_cap_ids_for_image_mut: &mut VecSet<ID> = dynamic_field::borrow_mut(&mut image.id, string::utf8(b"create_image_chunk_cap_ids"));
+        let create_image_chunk_cap_ids_for_image_mut: &mut VecSet<ID> = dynamic_field::borrow_mut(&mut image.id, b"create_image_chunk_cap_ids".to_string());
         // Remove the ID of the CreateImageChunkCap associated with the RegisterImageChunkCap in question.
-        vec_set::remove(create_image_chunk_cap_ids_for_image_mut, &cap.created_with);
+        create_image_chunk_cap_ids_for_image_mut.remove(&cap.created_with);
 
         // If the "create_image_chunk_cap_ids_for_image_mut" VecSet is empty,
         // remove the VecSet completely, unwrap it into keys vector, and destroy the empty vector.
         if (vec_set::is_empty(create_image_chunk_cap_ids_for_image_mut)) {
-            let create_image_chunk_cap_ids_for_image: VecSet<ID> = dynamic_field::remove(&mut image.id, string::utf8(b"create_image_chunk_cap_ids"));
-            let create_image_chunk_cap_ids_for_image_keys = vec_set::into_keys(create_image_chunk_cap_ids_for_image);
-            vector::destroy_empty(create_image_chunk_cap_ids_for_image_keys);
+            let create_image_chunk_cap_ids_for_image: VecSet<ID> = dynamic_field::remove(&mut image.id, b"create_image_chunk_cap_ids".to_string());
+            let create_image_chunk_cap_ids_for_image_keys = create_image_chunk_cap_ids_for_image.into_keys();
+            create_image_chunk_cap_ids_for_image_keys.destroy_empty();
         };
 
         let RegisterImageChunkCap {
@@ -368,7 +364,7 @@ module prime_machin::image {
             chunk_hash: _,
             created_with: _,
         } = cap;
-        object::delete(id);
+        id.delete();
     }
 
     public fun receive_and_destroy_image_chunk(
@@ -377,8 +373,8 @@ module prime_machin::image {
     ) {
         let chunk = transfer::receive(&mut image.id, chunk_to_receive);
 
-        let (_chunk_hash, chunk_opt) = vec_map::remove(&mut image.chunks, &chunk.hash);
-        let _chunk_id = option::destroy_some(chunk_opt);
+        let (_chunk_hash, chunk_opt) = image.chunks.remove(&chunk.hash);
+        let _chunk_id = chunk_opt.destroy_some();
 
         let ImageChunk {
             id,
@@ -389,10 +385,10 @@ module prime_machin::image {
             data: _,
         } = chunk;
 
-        object::delete(id);
+        id.delete();
     }
 
-    public(friend) fun issue_delete_image_promise(
+    public(package) fun issue_delete_image_promise(
         image: &Image,
     ): DeleteImagePromise {
         let promise = DeleteImagePromise {
@@ -402,43 +398,43 @@ module prime_machin::image {
         promise
     }
 
-    public(friend) fun verify_image_chunks_registered(
+    public(package) fun verify_image_chunks_registered(
         image: &Image,
     ) {
-        let chunk_keys = vec_map::keys(&image.chunks);
+        let mut chunk_keys = image.chunks.keys();
 
-        while (!vector::is_empty(&chunk_keys)) {
-            let chunk_key = vector::pop_back(&mut chunk_keys);
-            let chunk_value = vec_map::get(&image.chunks, &chunk_key);
-            assert!(option::is_some(chunk_value), EImageChunkMissingValue);
+        while (!chunk_keys.is_empty()) {
+            let chunk_key = chunk_keys.pop_back();
+            let chunk_value = &image.chunks[&chunk_key];
+            assert!(chunk_value.is_some(), EImageChunkMissingValue);
         };
 
-        vector::destroy_empty(chunk_keys);
+        chunk_keys.destroy_empty();
     }
 
     /// Return the ID of an Image.
-    public(friend) fun id(
+    public(package) fun id(
         image: &Image,
     ): ID {
         object::id(image)
     }
 
     /// Return the number of an Image.
-    public(friend) fun number(
+    public(package) fun number(
         image: &Image,
     ): u16 {
         image.number
     }
 
     /// Return the level of an Image.
-    public(friend) fun level(
+    public(package) fun level(
         image: &Image,
     ): u8 {
         image.level
     }
 
     /// Returns the ID of a CreateImageCap.
-    public(friend) fun create_image_cap_id(
+    public(package) fun create_image_cap_id(
         cap: &CreateImageCap,
     ): ID {
         object::id(cap)

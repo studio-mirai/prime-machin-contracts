@@ -2,22 +2,17 @@ module prime_machin::mint {
 
     // === Imports ===
 
-    use std::option::{Self, Option};
-    use std::string::{Self};
-    use std::vector::{Self};
+    use std::string;
 
     use sui::coin::{Self, Coin};
-    use sui::display::{Self};
+    use sui::display;
     use sui::event;
     use sui::kiosk::{Self, Kiosk, KioskOwnerCap};
-    use sui::object::{Self, ID, UID};
     use sui::object_table::{Self, ObjectTable};
-    use sui::package::{Self};
-    use sui::sui::{SUI};
+    use sui::package;
+    use sui::sui::SUI;
     use sui::table_vec::{Self, TableVec};
-    use sui::transfer::{Self};
     use sui::transfer_policy::{TransferPolicy};
-    use sui::tx_context::{Self, TxContext};
 
     use prime_machin::admin::{Self, AdminCap};
     use prime_machin::attributes::{Self, Attributes};
@@ -59,27 +54,27 @@ module prime_machin::mint {
 
     // === Structs ===
 
-    struct MINT has drop {}
+    public struct MINT has drop {}
 
-    struct DestroyMintReceiptCap has key {
+    public struct DestroyMintReceiptCap has key {
         id: UID,
         number: u16,
     }
 
-    struct MigrationTicket has key, store {
+    public struct MigrationTicket has key, store {
         id: UID,
         number: u16,
     }
 
-    struct MigrationWarehouse has key {
+    public struct MigrationWarehouse has key {
         id: UID,
         pfps: ObjectTable<u16, PrimeMachin>,
         is_initialized: bool,
     }
 
-    struct Mint has key {
+    public struct Mint has key {
         id: UID,
-        number: u16,    
+        number: u16,
         pfp: Option<PrimeMachin>,
         payment: Option<Coin<SUI>>,
         is_revealed: bool,
@@ -87,26 +82,26 @@ module prime_machin::mint {
         claim_expiration_epoch: u64,
     }
 
-    struct MintReceipt has key {
+    public struct MintReceipt has key {
         id: UID,
         number: u16,
         mint_id: ID,
     }
 
-    struct MintSettings has key {
+    public struct MintSettings has key {
         id: UID,
         price: u64,
         phase: u8,
         status: u8,
     }
 
-    struct MintWarehouse has key {
+    public struct MintWarehouse has key {
         id: UID,
         pfps: TableVec<PrimeMachin>,
         is_initialized: bool,
     }
 
-    struct RevealMintCap has key {
+    public struct RevealMintCap has key {
         id: UID,
         number: u16,
         pfp_id: ID,
@@ -116,21 +111,21 @@ module prime_machin::mint {
         create_rarity_cap_id: ID,
     }
 
-    struct WhitelistTicket has key {
+    public struct WhitelistTicket has key {
         id: UID,
         phase: u8,
     }
 
     // === Events ===
-    
-    struct MintClaimedEvent has copy, drop {
+
+    public struct MintClaimedEvent has copy, drop {
         pfp_id: ID,
         pfp_number: u16,
         claimed_by: address,
         kiosk_id: ID,
     }
 
-    struct MintEvent has copy, drop {
+    public struct MintEvent has copy, drop {
         mint_id: ID,
         pfp_id: ID,
         pfp_number: u16,
@@ -144,32 +139,32 @@ module prime_machin::mint {
         otw: MINT,
         ctx: &mut TxContext,
     ) {
-        let publisher = package::claim(otw, ctx);  
+        let publisher = package::claim(otw, ctx);
 
-        let migration_ticket_display = display::new<MigrationTicket>(&publisher, ctx);
-        display::add(&mut migration_ticket_display, string::utf8(b"name"), string::utf8(b"Prime Machin Migration Ticket #{number}"));
-        display::add(&mut migration_ticket_display, string::utf8(b"description"), string::utf8(b"A ticket that can be used to migrate Prime Machin #{number} from ICON to Sui."));
-        display::add(&mut migration_ticket_display, string::utf8(b"number"), string::utf8(b"{number}"));
-        display::add(&mut migration_ticket_display, string::utf8(b"image_url"), string::utf8(b"https://prime.nozomi.world/images/migration-ticket.webp"));
-        display::update_version(&mut migration_ticket_display);
-        transfer::public_transfer(migration_ticket_display, tx_context::sender(ctx));
+        let mut migration_ticket_display = display::new<MigrationTicket>(&publisher, ctx);
+        migration_ticket_display.add(b"name".to_string(), b"Prime Machin Migration Ticket #{number}".to_string());
+        migration_ticket_display.add(b"description".to_string(), b"A ticket that can be used to migrate Prime Machin #{number} from ICON to Sui.".to_string());
+        migration_ticket_display.add(b"number".to_string(), b"{number}".to_string());
+        migration_ticket_display.add(b"image_url".to_string(), b"https://prime.nozomi.world/images/migration-ticket.webp".to_string());
+        migration_ticket_display.update_version();
+        transfer::public_transfer(migration_ticket_display, ctx.sender());
 
-        let mint_receipt_display = display::new<MintReceipt>(&publisher, ctx);
-        display::add(&mut mint_receipt_display, string::utf8(b"name"), string::utf8(b"Prime Machin Mint Receipt #{number}"));
-        display::add(&mut mint_receipt_display, string::utf8(b"description"), string::utf8(b"A receipt that can be used to claim Prime Machin #{number}."));
-        display::add(&mut mint_receipt_display, string::utf8(b"number"), string::utf8(b"{number}"));
-        display::add(&mut mint_receipt_display, string::utf8(b"mint_id"), string::utf8(b"{mint_id}"));
-        display::add(&mut mint_receipt_display, string::utf8(b"image_url"), string::utf8(b"https://prime.nozomi.world/images/mint-receipt.webp"));
-        display::update_version(&mut mint_receipt_display);
-        transfer::public_transfer(mint_receipt_display, tx_context::sender(ctx));
+        let mut mint_receipt_display = display::new<MintReceipt>(&publisher, ctx);
+        mint_receipt_display.add(b"name".to_string(), b"Prime Machin Mint Receipt #{number}".to_string());
+        mint_receipt_display.add(b"description".to_string(), b"A receipt that can be used to claim Prime Machin #{number}.".to_string());
+        mint_receipt_display.add(b"number".to_string(), b"{number}".to_string());
+        mint_receipt_display.add(b"mint_id".to_string(), b"{mint_id}".to_string());
+        mint_receipt_display.add(b"image_url".to_string(), b"https://prime.nozomi.world/images/mint-receipt.webp".to_string());
+        mint_receipt_display.update_version();
+        transfer::public_transfer(mint_receipt_display, ctx.sender());
 
-        let wl_ticket_display = display::new<WhitelistTicket>(&publisher, ctx);
-        display::add(&mut wl_ticket_display, string::utf8(b"name"), string::utf8(b"Prime Machin Whitelist Ticket (Phase {phase})"));
-        display::add(&mut wl_ticket_display, string::utf8(b"description"), string::utf8(b"A Phase {phase} whitelist ticket for the Prime Machin collection by Studio Mirai."));
-        display::add(&mut wl_ticket_display, string::utf8(b"phase"), string::utf8(b"{phase}"));
-        display::add(&mut wl_ticket_display, string::utf8(b"image_url"), string::utf8(b"https://prime.nozomi.world/images/wl-ticket-phase-{phase}.webp"));
-        display::update_version(&mut wl_ticket_display);
-        transfer::public_transfer(wl_ticket_display, tx_context::sender(ctx));
+        let mut wl_ticket_display = display::new<WhitelistTicket>(&publisher, ctx);
+        wl_ticket_display.add(b"name".to_string(), b"Prime Machin Whitelist Ticket (Phase {phase})".to_string());
+        wl_ticket_display.add(b"description".to_string(), b"A Phase {phase} whitelist ticket for the Prime Machin collection by Studio Mirai.".to_string());
+        wl_ticket_display.add(b"phase".to_string(), b"{phase}".to_string());
+        wl_ticket_display.add(b"image_url".to_string(), b"https://prime.nozomi.world/images/wl-ticket-phase-{phase}.webp".to_string());
+        wl_ticket_display.update_version();
+        transfer::public_transfer(wl_ticket_display, ctx.sender());
 
         let mint_settings = MintSettings {
             id: object::new(ctx),
@@ -177,7 +172,7 @@ module prime_machin::mint {
             price: 0,
             status: 0,
         };
-        
+
         let mint_warehouse = MintWarehouse {
             id: object::new(ctx),
             pfps: table_vec::empty(ctx),
@@ -191,7 +186,7 @@ module prime_machin::mint {
         };
 
         transfer::public_transfer(publisher, @sm_treasury);
-        
+
         transfer::share_object(migration_warehouse);
         transfer::share_object(mint_settings);
         transfer::share_object(mint_warehouse);
@@ -201,7 +196,7 @@ module prime_machin::mint {
 
     public fun claim_mint(
         receipt: MintReceipt,
-        mint: Mint,
+        mut mint: Mint,
         kiosk: &mut Kiosk,
         kiosk_owner_cap: &KioskOwnerCap,
         policy: &TransferPolicy<PrimeMachin>,
@@ -211,20 +206,20 @@ module prime_machin::mint {
         assert!(mint.is_revealed == true, EPrimeMachinNotRevealed);
 
         // Extract Prime Machin and payment from Mint.
-        let pfp = option::extract(&mut mint.pfp);
-        let payment = option::extract(&mut mint.payment);
+        let pfp = mint.pfp.extract();
+        let payment = mint.payment.extract();
 
         event::emit(
             MintClaimedEvent {
-                pfp_id: factory::id(&pfp),
-                pfp_number: factory::number(&pfp),
-                claimed_by: tx_context::sender(ctx),
+                pfp_id: pfp.id(),
+                pfp_number: pfp.number(),
+                claimed_by: ctx.sender(),
                 kiosk_id: object::id(kiosk),
             }
         );
 
         // Lock Prime Machin into buyer's kiosk.
-        kiosk::lock(kiosk, kiosk_owner_cap, policy, pfp);
+        kiosk.lock(kiosk_owner_cap, policy, pfp);
 
         // Transfer payment to SM.
         transfer::public_transfer(payment, @sm_treasury);
@@ -234,7 +229,7 @@ module prime_machin::mint {
 
         // Destroy the mint receipt.
         let MintReceipt { id, number: _, mint_id: _ } = receipt;
-        object::delete(id);
+        id.delete();
     }
 
     /// Destroys a mint receipt in the case that a mint is refunded by ADMIN.
@@ -248,10 +243,10 @@ module prime_machin::mint {
         assert!(cap.number == receipt.number, EInvalidDestroyCapForMintReceipt);
 
         let DestroyMintReceiptCap { id, number: _ } = cap;
-        object::delete(id);
+        id.delete();
 
         let MintReceipt { id, number: _, mint_id: _ } = receipt;
-        object::delete(id);
+        id.delete();
     }
 
     /// Destroy a migration ticket.
@@ -259,7 +254,7 @@ module prime_machin::mint {
         ticket: MigrationTicket,
     ) {
         let MigrationTicket { id, number: _ } = ticket;
-        object::delete(id);
+        id.delete();
     }
 
     /// Destroy a whitelist ticket.
@@ -267,7 +262,7 @@ module prime_machin::mint {
         ticket: WhitelistTicket,
     ) {
         let WhitelistTicket { id, phase: _ } = ticket;
-        object::delete(id);
+        id.delete();
     }
 
 
@@ -280,15 +275,15 @@ module prime_machin::mint {
         assert!(settings.status == 1, EMintNotLive);
         assert!(settings.phase != 0, EMintPhaseNotSet);
 
-        let pfp = object_table::remove(&mut warehouse.pfps, ticket.number);
+        let pfp = warehouse.pfps.remove(ticket.number);
         let payment = coin::zero<SUI>(ctx);
 
         let MigrationTicket {
             id,
             number: _,
         } = ticket;
-        object::delete(id);
-        
+        id.delete();
+
         mint_internal(pfp, payment, ctx);
     }
 
@@ -298,14 +293,14 @@ module prime_machin::mint {
         settings: &MintSettings,
         ctx: &mut TxContext,
     ) {
-        assert!(table_vec::length(&warehouse.pfps) > 0, EWarehouseIsEmpty);
+        assert!(warehouse.pfps.length() > 0, EWarehouseIsEmpty);
 
         assert!(settings.status == 1, EMintNotLive);
         assert!(settings.phase == 3, ECurrentPhaseNotPhaseThree);
 
-        assert!(coin::value(&payment) == settings.price, EInvalidPaymentAmount);
+        assert!(payment.value() == settings.price, EInvalidPaymentAmount);
 
-        let pfp = table_vec::pop_back(&mut warehouse.pfps);
+        let pfp = warehouse.pfps.pop_back();
         mint_internal(pfp, payment, ctx);
     }
 
@@ -319,59 +314,59 @@ module prime_machin::mint {
         assert!(settings.status == 1, EMintNotLive);
         assert!(ticket.phase == settings.phase, EInvalidTicketForMintPhase);
 
-        assert!(coin::value(&payment) == settings.price, EInvalidPaymentAmount);
+        assert!(payment.value() == settings.price, EInvalidPaymentAmount);
 
-        let pfp = table_vec::pop_back(&mut warehouse.pfps);
+        let pfp = warehouse.pfps.pop_back();
         mint_internal(pfp, payment, ctx);
 
         let WhitelistTicket { id, phase: _ } = ticket;
-        object::delete(id);
+        id.delete();
     }
 
     /// Add Prime Machin PFPs to the mint warehouse.
     public fun admin_add_to_mint_warehouse(
         cap: &AdminCap,
-        pfps: vector<PrimeMachin>,
+        mut pfps: vector<PrimeMachin>,
         warehouse: &mut MintWarehouse,
         ctx: &TxContext,
     ) {
-        admin::verify_admin_cap(cap, ctx);
+        cap.verify_admin_cap(ctx);
 
         assert!(warehouse.is_initialized == false, EMintWarehouseAlreadyInitialized);
 
-        while (!vector::is_empty(&pfps)) {
-            let pfp = vector::pop_back(&mut pfps);
-            table_vec::push_back(&mut warehouse.pfps, pfp);
+        while (!pfps.is_empty()) {
+            let pfp = pfps.pop_back();
+            warehouse.pfps.push_back(pfp);
         };
 
-        if ((table_vec::length(&warehouse.pfps) as u16) == TARGET_NEW_MINT_COUNT) {
+        if ((warehouse.pfps.length() as u16) == TARGET_NEW_MINT_COUNT) {
             warehouse.is_initialized = true;
         };
 
-        vector::destroy_empty(pfps);
+        pfps.destroy_empty()
     }
 
     /// Add Prime Machin PFPs to the migration warehouse.
     public fun admin_add_to_migration_warehouse(
         cap: &AdminCap,
-        pfps: vector<PrimeMachin>,
+        mut pfps: vector<PrimeMachin>,
         warehouse: &mut MigrationWarehouse,
         ctx: &TxContext,
     ) {
-        admin::verify_admin_cap(cap, ctx);
+        cap.verify_admin_cap(ctx);
 
         assert!(warehouse.is_initialized == false, EMigrationWarehouseAlreadyInitialized);
 
-        while (!vector::is_empty(&pfps)) {
-            let pfp = vector::pop_back(&mut pfps);
-            object_table::add(&mut warehouse.pfps, factory::number(&pfp), pfp);
+        while (!pfps.is_empty()) {
+            let pfp = pfps.pop_back();
+            warehouse.pfps.add(pfp.number(), pfp);
         };
 
-        if ((object_table::length(&warehouse.pfps) as u16) == TARGET_MIGRATION_MINT_COUNT) {
+        if ((warehouse.pfps.length() as u16) == TARGET_MIGRATION_MINT_COUNT) {
             warehouse.is_initialized = true;
         };
 
-        vector::destroy_empty(pfps);
+        pfps.destroy_empty();
     }
 
     /// Destroy an empty migration warehouse when it's no longer needed.
@@ -380,9 +375,9 @@ module prime_machin::mint {
         warehouse: MigrationWarehouse,
         ctx: &TxContext,
     ) {
-        admin::verify_admin_cap(cap, ctx);
+        cap.verify_admin_cap(ctx);
 
-        assert!(object_table::is_empty(&warehouse.pfps), EMigrationWarehouseNotEmpty);
+        assert!(warehouse.pfps.is_empty(), EMigrationWarehouseNotEmpty);
         assert!(warehouse.is_initialized == true, EMigrationWarehouseNotInitialized);
 
         let MigrationWarehouse {
@@ -391,8 +386,8 @@ module prime_machin::mint {
             is_initialized: _,
         } = warehouse;
 
-        object_table::destroy_empty(pfps);
-        object::delete(id);
+        pfps.destroy_empty();
+        id.delete();
     }
 
     /// Destroy an empty mint warehouse when it's no longer needed.
@@ -401,9 +396,9 @@ module prime_machin::mint {
         warehouse: MintWarehouse,
         ctx: &TxContext,
     ) {
-        admin::verify_admin_cap(cap, ctx);
+        cap.verify_admin_cap(ctx);
 
-        assert!(table_vec::is_empty(&warehouse.pfps), EMintWarehouseNotEmpty);
+        assert!(warehouse.pfps.is_empty(), EMintWarehouseNotEmpty);
         assert!(warehouse.is_initialized == true, EMintWarehouseNotInitialized);
 
         let MintWarehouse {
@@ -412,8 +407,8 @@ module prime_machin::mint {
             is_initialized: _,
         } = warehouse;
 
-        table_vec::destroy_empty(pfps);
-        object::delete(id);
+        pfps.destroy_empty();
+        id.delete();
     }
 
     /// Set phase and mint price.
@@ -423,7 +418,7 @@ module prime_machin::mint {
         settings: &mut MintSettings,
         ctx: &TxContext,
     ) {
-        admin::verify_admin_cap(cap, ctx);
+        cap.verify_admin_cap(ctx);
 
         assert!(phase >= 1 && phase <= 3, EInvalidPhaseNumber);
         settings.phase = phase;
@@ -435,7 +430,7 @@ module prime_machin::mint {
         settings: &mut MintSettings,
         ctx: &TxContext,
     ) {
-        admin::verify_admin_cap(cap, ctx);
+        cap.verify_admin_cap(ctx);
 
         assert!(price > 0, EInvalidPrice);
         settings.price = price;
@@ -447,7 +442,7 @@ module prime_machin::mint {
         settings: &mut MintSettings,
         ctx: &TxContext,
     ) {
-        admin::verify_admin_cap(cap, ctx);
+        cap.verify_admin_cap(ctx);
 
         assert!(settings.status == 0 || settings.status == 1, EInvalidStatusNumber);
         settings.status = status;
@@ -460,10 +455,10 @@ module prime_machin::mint {
         warehouse: &MigrationWarehouse,
         ctx: &mut TxContext,
     ) {
-        admin::verify_admin_cap(cap, ctx);
+        cap.verify_admin_cap(ctx);
 
         assert!(warehouse.is_initialized == true, EMigrationMintWarehouseNotIntialized);
-        assert!(object_table::contains(&warehouse.pfps, number), EInvalidMigrationPfpNumber);
+        assert!(warehouse.pfps.contains(number), EInvalidMigrationPfpNumber);
 
         let migration_ticket = MigrationTicket {
             id: object::new(ctx),
@@ -479,7 +474,7 @@ module prime_machin::mint {
         beneficiary: address,
         ctx: &mut TxContext,
     ) {
-        admin::verify_admin_cap(cap, ctx);
+        cap.verify_admin_cap(ctx);
 
         assert!(phase == 1 || phase == 2, EInvalidWhitelistPhaseNumber);
 
@@ -487,33 +482,33 @@ module prime_machin::mint {
             id: object::new(ctx),
             phase: phase,
         };
-        
+
         transfer::transfer(wl_ticket, beneficiary);
     }
 
     public fun admin_refund_mint(
         cap: &AdminCap,
-        mint: Mint,
+        mut mint: Mint,
         kiosk: &mut Kiosk,
         kiosk_owner_cap: &KioskOwnerCap,
         policy: &TransferPolicy<PrimeMachin>,
         ctx: &mut TxContext,
     ) {
-        admin::verify_admin_cap(cap, ctx);
+        cap.verify_admin_cap(ctx);
 
-        assert!(tx_context::epoch(ctx) > mint.claim_expiration_epoch, EMintClaimPeriodNotExpired);
-        
+        assert!(ctx.epoch() > mint.claim_expiration_epoch, EMintClaimPeriodNotExpired);
+
         let destroy_mint_receipt_cap = DestroyMintReceiptCap {
             id: object::new(ctx),
             number: mint.number,
         };
 
         // Extract Prime Machin and payment from Mint.
-        let pfp = option::extract(&mut mint.pfp);
-        let payment = option::extract(&mut mint.payment);
+        let pfp = mint.pfp.extract();
+        let payment = mint.payment.extract();
 
         // Lock Prime Machin into ADMIN's kiosk.
-        kiosk::lock(kiosk, kiosk_owner_cap, policy, pfp);
+        kiosk.lock(kiosk_owner_cap, policy, pfp);
 
         // Transfer payment back to the original minter.
         transfer::public_transfer(payment, mint.minted_by);
@@ -535,11 +530,11 @@ module prime_machin::mint {
 
         image::verify_image_chunks_registered(&image);
 
-        let pfp = option::borrow_mut(&mut mint.pfp);
+        let pfp = mint.pfp.borrow_mut();
 
-        factory::set_attributes(pfp, attributes);
-        factory::set_image(pfp, image);
-        factory::set_rarity(pfp, rarity);
+        pfp.set_attributes(attributes);
+        pfp.set_image(image);
+        pfp.set_rarity(rarity);
 
         mint.is_revealed = true;
 
@@ -552,38 +547,38 @@ module prime_machin::mint {
             create_image_cap_id: _,
             create_rarity_cap_id: _,
         } = cap;
-        object::delete(id);
+        id.delete();
     }
 
     fun mint_internal(
-        pfp: PrimeMachin,
+        mut pfp: PrimeMachin,
         payment: Coin<SUI>,
         ctx: &mut TxContext,
     ) {
-        let mint = Mint {
+        let mut mint = Mint {
             id: object::new(ctx),
-            number: factory::number(&pfp),
+            number: pfp.number(),
             pfp: option::none(),
             payment: option::some(payment),
             is_revealed: false,
-            minted_by: tx_context::sender(ctx),
-            claim_expiration_epoch: tx_context::epoch(ctx) + EPOCHS_TO_CLAIM_MINT,
+            minted_by: ctx.sender(),
+            claim_expiration_epoch: ctx.epoch() + EPOCHS_TO_CLAIM_MINT,
         };
 
         let receipt = MintReceipt {
             id: object::new(ctx),
-            number: factory::number(&pfp),
+            number: pfp.number(),
             mint_id: object::id(&mint),
         };
 
-        let create_attributes_cap = attributes::issue_create_attributes_cap(factory::number(&pfp), ctx);
-        let create_image_cap = image::issue_create_image_cap(factory::number(&pfp), 0, object::id(&mint), ctx);
-        let create_rarity_cap = rarity::issue_create_rarity_cap(factory::number(&pfp), ctx);
-        
+        let create_attributes_cap = attributes::issue_create_attributes_cap(pfp.number(), ctx);
+        let create_image_cap = image::issue_create_image_cap(pfp.number(), 0, object::id(&mint), ctx);
+        let create_rarity_cap = rarity::issue_create_rarity_cap(pfp.number(), ctx);
+
         let reveal_mint_cap = RevealMintCap {
             id: object::new(ctx),
-            number: factory::number(&pfp),
-            pfp_id: factory::id(&pfp),
+            number: pfp.number(),
+            pfp_id: pfp.id(),
             mint_id: object::id(&mint),
             create_attributes_cap_id: attributes::create_attributes_cap_id(&create_attributes_cap),
             create_image_cap_id: image::create_image_cap_id(&create_image_cap),
@@ -593,16 +588,16 @@ module prime_machin::mint {
         event::emit(
             MintEvent {
                 mint_id: object::id(&mint),
-                pfp_id: factory::id(&pfp),
-                pfp_number: factory::number(&pfp),
-                minted_by: tx_context::sender(ctx),
+                pfp_id: pfp.id(),
+                pfp_number: pfp.number(),
+                minted_by: ctx.sender(),
             }
         );
 
-        factory::set_minted_by_address(&mut pfp, tx_context::sender(ctx));
-        option::fill(&mut mint.pfp, pfp);
-        
-        transfer::transfer(receipt, tx_context::sender(ctx));
+        pfp.set_minted_by_address(ctx.sender());
+        mint.pfp.fill(pfp);
+
+        transfer::transfer(receipt, ctx.sender());
         transfer::transfer(reveal_mint_cap, @sm_api);
 
         transfer::public_transfer(create_attributes_cap, @sm_api);
@@ -624,9 +619,9 @@ module prime_machin::mint {
             minted_by: _,
             claim_expiration_epoch: _,
         } = mint;
-        
-        option::destroy_none(pfp);
-        option::destroy_none(payment);
-        object::delete(id);
+
+        pfp.destroy_none();
+        payment.destroy_none();
+        id.delete();
     }
 }

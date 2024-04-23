@@ -2,28 +2,25 @@ module prime_machin::rarity {
 
     // === Imports ===
 
-    use std::string::{String};
+    use std::string::String;
 
-    use sui::object::{Self, ID, UID};
-    use sui::tx_context::{TxContext};
-    
     // === Friends ===
 
-    friend prime_machin::mint;
-    friend prime_machin::factory;
+    /* friend prime_machin::mint; */
+    /* friend prime_machin::factory; */
 
     // === Structs ===
 
     /// An object that holds a `RarityData` object,
     /// assigned to the "rarity" field of a `PrimeMachin` object.
-    struct Rarity has key, store {
+    public struct Rarity has key, store {
         id: UID,
         number: u16,
         data: RarityData,
     }
 
     /// An object that holds class, rank, and score for a Prime Machin.
-    struct RarityData has store {
+    public struct RarityData has store {
         class: String,
         rank: u16,
         score: u64,
@@ -31,11 +28,11 @@ module prime_machin::rarity {
 
     /// A cap object that gives ADMIN the ability to create
     /// `Rarity` and `RarityData` objects.
-    struct CreateRarityCap has key, store {
+    public struct CreateRarityCap has key, store {
         id: UID,
         number: u16,
     }
-    
+
     /// Create a `Rarity` object with a `CreateRarityCap`.
     public fun create_rarity(
         cap: CreateRarityCap,
@@ -57,13 +54,13 @@ module prime_machin::rarity {
         };
 
         let CreateRarityCap { id, number: _ } = cap;
-        object::delete(id);
+        id.delete();
 
         rarity
     }
 
     /// Create a `CreateRarityCap`.
-    public(friend) fun issue_create_rarity_cap(
+    public(package) fun issue_create_rarity_cap(
         number: u16,
         ctx: &mut TxContext,
     ): CreateRarityCap {
@@ -76,14 +73,14 @@ module prime_machin::rarity {
     }
 
     /// Returns the number of the `Rarity` object.
-    public(friend) fun number(
+    public(package) fun number(
         rarity: &Rarity,
     ): u16 {
         rarity.number
     }
 
     /// Returns the ID of the `CreateRarityCap` object.
-    public(friend) fun create_rarity_cap_id(
+    public(package) fun create_rarity_cap_id(
         cap: &CreateRarityCap,
     ): ID {
         object::id(cap)

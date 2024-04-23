@@ -3,7 +3,7 @@ module prime_machin::image {
     // === Imports ===
 
     use std::hash;
-    use std::string::{Self, String};
+    use std::string::String;
 
     use sui::display;
     use sui::dynamic_field;
@@ -153,9 +153,9 @@ module prime_machin::image {
             id: object::new(ctx),
             number: cap.number,
             level: cap.level,
-            encoding: string::utf8(b"base85"),
-            mime_type: string::utf8(b"image/avif"),
-            extension: string::utf8(b"avif"),
+            encoding: b"base85".to_string(),
+            mime_type: b"image/avif".to_string(),
+            extension: b"avif".to_string(),
             created_with: object::id(&cap),
             chunks: vec_map::empty(),
         };
@@ -164,9 +164,9 @@ module prime_machin::image {
         let mut create_image_chunk_cap_ids = vec_set::empty<ID>();
 
         // Initialize the chunks VecMap with expected chunk hashes as keys.
-        while (!vector::is_empty(&image_chunk_hashes)) {
-            let chunk_index = (vector::length(&image_chunk_hashes) as u8);
-            let chunk_hash = vector::pop_back(&mut image_chunk_hashes);
+        while (!image_chunk_hashes.is_empty()) {
+            let chunk_index = (image_chunk_hashes.length() as u8);
+            let chunk_hash = image_chunk_hashes.pop_back();
 
             let create_image_chunk_cap = CreateImageChunkCap {
                 id: object::new(ctx),
@@ -188,8 +188,8 @@ module prime_machin::image {
                 }
             );
 
-            vec_map::insert(&mut image.chunks, chunk_hash, option::none());
-            vec_set::insert(&mut create_image_chunk_cap_ids, object::id(&create_image_chunk_cap));
+            image.chunks.insert(chunk_hash, option::none());
+            create_image_chunk_cap_ids.insert(object::id(&create_image_chunk_cap));
 
             transfer::transfer(create_image_chunk_cap, @sm_api);
         };
@@ -197,7 +197,7 @@ module prime_machin::image {
         // Add a dynamic field to store the CreateImageChunkCap IDs.
         dynamic_field::add(
             &mut image.id,
-            string::utf8(b"create_image_chunk_cap_ids"),
+            b"create_image_chunk_cap_ids".to_string(),
             create_image_chunk_cap_ids,
         );
 
@@ -221,22 +221,22 @@ module prime_machin::image {
         ctx: &mut TxContext,
     ) {
         // Create an empty string.
-        let mut concat_chunk_str = string::utf8(b"");
+        let mut concat_chunk_str = b"".to_string();
 
         // Loop through data, remove each string, and append it to the concatenated string.
-        while (!vector::is_empty(&data)) {
+        while (!data.is_empty()) {
             // Remove the first string in the vector.
-            let chunk_str = vector::remove(&mut data, 0);
-            string::append(&mut concat_chunk_str, chunk_str);
+            let chunk_str = data.remove(0);
+            concat_chunk_str.append(chunk_str);
         };
 
         // Grab a reference to the concatenated string's underlying bytes.
-        let concat_chunk_bytes = string::bytes(&concat_chunk_str);
+        let concat_chunk_bytes = concat_chunk_str.bytes();
 
         // Calculate a SHA-256 hash of the concatenated string.
         let chunk_hash_bytes = hash::sha2_256(*concat_chunk_bytes);
         let chunk_hash_hex = hex::encode(chunk_hash_bytes);
-        let chunk_hash_str = string::utf8(chunk_hash_hex);
+        let chunk_hash_str = chunk_hash_hex.to_string();
 
         // Assert the calculated hash matches the target hash.
         assert!(chunk_hash_str == cap.hash, EImageChunkHashMismatch);
@@ -351,7 +351,7 @@ module prime_machin::image {
 
         // If the "create_image_chunk_cap_ids_for_image_mut" VecSet is empty,
         // remove the VecSet completely, unwrap it into keys vector, and destroy the empty vector.
-        if (vec_set::is_empty(create_image_chunk_cap_ids_for_image_mut)) {
+        if (create_image_chunk_cap_ids_for_image_mut.is_empty()) {
             let create_image_chunk_cap_ids_for_image: VecSet<ID> = dynamic_field::remove(&mut image.id, b"create_image_chunk_cap_ids".to_string());
             let create_image_chunk_cap_ids_for_image_keys = create_image_chunk_cap_ids_for_image.into_keys();
             create_image_chunk_cap_ids_for_image_keys.destroy_empty();

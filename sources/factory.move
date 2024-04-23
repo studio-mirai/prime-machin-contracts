@@ -2,8 +2,6 @@ module prime_machin::factory {
 
     // === Imports ===
 
-    use std::string;
-
     use sui::display;
     use sui::kiosk;
     use sui::math;
@@ -11,7 +9,7 @@ module prime_machin::factory {
     use sui::package;
     use sui::transfer_policy;
 
-    use prime_machin::admin::{Self, AdminCap};
+    use prime_machin::admin::AdminCap;
     use prime_machin::attributes::{Attributes};
     use prime_machin::collection;
     use prime_machin::image::{Self, Image, DeleteImagePromise};
@@ -91,7 +89,7 @@ module prime_machin::factory {
 
         let (policy, policy_cap) = transfer_policy::new<PrimeMachin>(&publisher, ctx);
 
-        transfer::transfer(factory, tx_context::sender(ctx));
+        transfer::transfer(factory, ctx.sender());
 
         transfer::public_transfer(policy_cap, @sm_treasury);
         transfer::public_transfer(publisher, @sm_treasury);
@@ -107,7 +105,7 @@ module prime_machin::factory {
         factory: Factory,
         ctx: &TxContext,
     ) {
-        admin::verify_admin_cap(cap, ctx);
+        cap.verify_admin_cap(ctx);
 
         assert!(factory.is_initialized == true, EFactoryNotInitialized);
         assert!(object_table::is_empty(&factory.pfps), EFactoryNotEmpty);
@@ -129,11 +127,11 @@ module prime_machin::factory {
         registry: &mut Registry,
         ctx: &mut TxContext,
     ) {
-        admin::verify_admin_cap(cap, ctx);
+        cap.verify_admin_cap(ctx);
 
         assert!(factory.is_initialized == false, EFactoryAlreadyInitialized);
 
-        let mut number = (object_table::length(&factory.pfps) as u16) + 1;
+        let mut number = (factory.pfps.length() as u16) + 1;
         let end_number = (math::min((number + 332 as u64), (collection::size() as u64)) as u16);
 
         while (number <= end_number) {
@@ -154,7 +152,7 @@ module prime_machin::factory {
             };
 
             // Set the Kiosk's 'owner' field to the address of the Prime Machin.
-            kiosk::set_owner_custom(&mut kiosk, &kiosk_owner_cap, object::id_address(&pfp));
+            kiosk.set_owner_custom(&kiosk_owner_cap, object::id_address(&pfp));
 
             transfer::public_transfer(kiosk_owner_cap, object::id_to_address(&object::id(&pfp)));
             transfer::public_share_object(kiosk);
@@ -163,13 +161,13 @@ module prime_machin::factory {
             registry::add(number, object::id(&pfp), registry);
 
             // Add Prime Machin to factory.
-            object_table::add(&mut factory.pfps, number, pfp);
+            factory.pfps.add(number, pfp);
 
             number = number + 1;
         };
 
         // Initialize factory if 3,333 Prime Machin have been created.
-        if ((object_table::length(&factory.pfps) as u16) == collection::size()) {
+        if ((factory.pfps.length() as u16) == collection::size()) {
             factory.is_initialized = true;
         };
     }
@@ -180,16 +178,16 @@ module prime_machin::factory {
         factory: &mut Factory,
         ctx: &TxContext,
     ): vector<PrimeMachin> {
-        admin::verify_admin_cap(cap, ctx);
+        cap.verify_admin_cap(ctx);
 
         assert!(factory.is_initialized == true, EFactoryNotInitialized);
 
-        let mut pfps = vector::empty<PrimeMachin>();
+        let mut pfps = vector<PrimeMachin>[];
 
-        while (!vector::is_empty(&numbers)) {
-            let number = vector::pop_back(&mut numbers);
-            let pfp = object_table::remove(&mut factory.pfps, number);
-            vector::push_back(&mut pfps, pfp);
+        while (!numbers.is_empty()) {
+            let number = numbers.pop_back();
+            let pfp = factory.pfps.remove(number);
+            pfps.push_back(pfp);
         };
 
         pfps
@@ -249,61 +247,61 @@ module prime_machin::factory {
         pfp: &mut PrimeMachin,
         attributes: Attributes,
     ) {
-        assert!(option::is_none(&pfp.attributes), EAttributesAlreadySet);
-        option::fill(&mut pfp.attributes, attributes);
+        assert!(pfp.attributes.is_none(), EAttributesAlreadySet);
+        pfp.attributes.fill(attributes);
     }
 
     public(package) fun set_image(
         pfp: &mut PrimeMachin,
         image: Image,
     ) {
-        assert!(option::is_none(&pfp.image), EImageAlreadySet);
-        option::fill(&mut pfp.image, image);
+        assert!(pfp.image.is_none(), EImageAlreadySet);
+        pfp.image.fill(image);
     }
 
     public(package) fun unset_image(
         pfp: &mut PrimeMachin,
     ): Image {
-        assert!(option::is_some(&pfp.image), EImageNotSet);
-        option::extract(&mut pfp.image)
+        assert!(pfp.image.is_some(), EImageNotSet);
+        pfp.image.extract()
     }
 
     public(package) fun set_lvl1_colored_by_address(
         pfp: &mut PrimeMachin,
         addr: address,
     ) {
-        option::fill(&mut pfp.lvl1_colored_by, addr);
+        pfp.lvl1_colored_by.fill(addr);
     }
 
     public(package) fun set_lvl2_colored_by_address(
         pfp: &mut PrimeMachin,
         addr: address,
     ) {
-        option::fill(&mut pfp.lvl2_colored_by, addr);
+        pfp.lvl2_colored_by.fill(addr);
     }
 
     public(package) fun set_minted_by_address(
         pfp: &mut PrimeMachin,
         addr: address,
     ) {
-        option::fill(&mut pfp.minted_by, addr);
+        pfp.minted_by.fill(addr);
     }
 
     public(package) fun set_rarity(
         pfp: &mut PrimeMachin,
         rarity: Rarity,
     ) {
-        assert!(option::is_none(&pfp.rarity), ERarityAlreadySet);
-        option::fill(&mut pfp.rarity, rarity);
+        assert!(pfp.rarity.is_none(), ERarityAlreadySet);
+        pfp.rarity.fill(rarity);
     }
 
     public(package) fun swap_image(
         pfp: &mut PrimeMachin,
         new_image: Image,
     ): (Image, DeleteImagePromise) {
-        assert!(pfp.number == image::number(&new_image), EImageNumberMismatch);
+        assert!(pfp.number == new_image.number(), EImageNumberMismatch);
 
-        let old_image = option::swap(&mut pfp.image, new_image);
+        let old_image = pfp.image.swap(new_image);
         let promise = image::issue_delete_image_promise(&old_image);
 
         (old_image, promise)

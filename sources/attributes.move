@@ -75,7 +75,7 @@ module prime_machin::attributes {
         };
 
         let CreateAttributesCap { id, number: _ } = cap;
-        object::delete(id);
+        id.delete();
 
         attributes
     }

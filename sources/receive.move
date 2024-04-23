@@ -4,14 +4,14 @@ module prime_machin::receive {
 
     use std::type_name::{Self, TypeName};
 
-    use sui::coin::{Self, Coin};
+    use sui::coin::Coin;
     use sui::event;
     use sui::kiosk::{KioskOwnerCap};
     use sui::transfer::Receiving;
 
-    use prime_machin::admin::{Self, AdminCap};
+    use prime_machin::admin::AdminCap;
     use prime_machin::coloring::{ColoringReceipt};
-    use prime_machin::factory::{Self , PrimeMachin};
+    use prime_machin::factory::PrimeMachin;
     use prime_machin::image::{ImageChunk, RegisterImageChunkCap};
 
     use koto::koto::KOTO;
@@ -80,7 +80,7 @@ module prime_machin::receive {
         assert!(type_name::get<T>() != type_name::get<RegisterImageChunkCap>(), EInvalidReceiveType);
 
         // Assert KOTO fee is the correct amount.
-        assert!(coin::value(&fee) == settings.fee, EIncorrectKotoFeeAmount);
+        assert!(fee.value() == settings.fee, EIncorrectKotoFeeAmount);
 
         // Transfer the fee to SM.
         transfer::public_transfer(fee, @sm_treasury);

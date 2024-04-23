@@ -54,7 +54,7 @@ module prime_machin::rarity {
         };
 
         let CreateRarityCap { id, number: _ } = cap;
-        object::delete(id);
+        id.delete();
 
         rarity
     }

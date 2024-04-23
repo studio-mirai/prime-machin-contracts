@@ -2,13 +2,11 @@ module prime_machin::registry {
 
     // === Imports ===
 
-    use std::string;
-
     use sui::display;
     use sui::package;
     use sui::table::{Self, Table};
 
-    use prime_machin::admin::{Self, AdminCap};
+    use prime_machin::admin::AdminCap;
     use prime_machin::collection;
 
     // === Friends ===
@@ -54,11 +52,11 @@ module prime_machin::registry {
         };
 
         let mut registry_display = display::new<Registry>(&publisher, ctx);
-        display::add(&mut registry_display, string::utf8(b"name"), string::utf8(b"Prime Machin Registry"));
-        display::add(&mut registry_display, string::utf8(b"description"), string::utf8(b"The official registry of the Prime Machin collection by Studio Mirai."));
-        display::add(&mut registry_display, string::utf8(b"image_url"), string::utf8(b"https://prime.nozomi.world/images/registry.webp."));
-        display::add(&mut registry_display, string::utf8(b"is_initialized"), string::utf8(b"{is_initialized}"));
-        display::add(&mut registry_display, string::utf8(b"is_frozen"), string::utf8(b"{is_frozen}"));
+        registry_display.add(b"name".to_string(), b"Prime Machin Registry".to_string());
+        registry_display.add(b"description".to_string(), b"The official registry of the Prime Machin collection by Studio Mirai.".to_string());
+        registry_display.add(b"image_url".to_string(), b"https://prime.nozomi.world/images/registry.webp.".to_string());
+        registry_display.add(b"is_initialized".to_string(), b"{is_initialized}".to_string());
+        registry_display.add(b"is_frozen".to_string(), b"{is_frozen}".to_string());
 
         transfer::transfer(registry, tx_context::sender(ctx));
 
@@ -74,7 +72,7 @@ module prime_machin::registry {
         assert!(number >= 1 && number <= collection::size(), EInvalidPfpNumber);
         assert!(registry.is_frozen == true, ERegistryNotFrozen);
 
-        *table::borrow(&registry.pfps, number)
+        registry.pfps[number]
     }
 
     // === Public-Friend Functions ===
@@ -84,9 +82,9 @@ module prime_machin::registry {
         pfp_id: ID,
         registry: &mut Registry,
     ) {
-        table::add(&mut registry.pfps, number, pfp_id);
+        registry.pfps.add(number, pfp_id);
 
-        if ((table::length(&registry.pfps) as u16) == collection::size()) {
+        if ((registry.pfps.length() as u16) == collection::size()) {
             registry.is_initialized = true;
         };
     }
@@ -111,7 +109,7 @@ module prime_machin::registry {
         mut registry: Registry,
         ctx: &TxContext,
     ) {
-        admin::verify_admin_cap(cap, ctx);
+        cap.verify_admin_cap(ctx);
 
         assert!(registry.is_frozen == false, ERegistryAlreadyFrozen);
         assert!(registry.is_initialized == true, ERegistryNotIntialized);

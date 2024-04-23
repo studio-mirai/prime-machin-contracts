@@ -2,21 +2,19 @@ module prime_machin::mint {
 
     // === Imports ===
 
-    use std::string;
-
     use sui::coin::{Self, Coin};
     use sui::display;
     use sui::event;
-    use sui::kiosk::{Self, Kiosk, KioskOwnerCap};
+    use sui::kiosk::{Kiosk, KioskOwnerCap};
     use sui::object_table::{Self, ObjectTable};
     use sui::package;
     use sui::sui::SUI;
     use sui::table_vec::{Self, TableVec};
     use sui::transfer_policy::{TransferPolicy};
 
-    use prime_machin::admin::{Self, AdminCap};
+    use prime_machin::admin::AdminCap;
     use prime_machin::attributes::{Self, Attributes};
-    use prime_machin::factory::{Self , PrimeMachin};
+    use prime_machin::factory::PrimeMachin;
     use prime_machin::image::{Self, Image};
     use prime_machin::rarity::{Self, Rarity};
 
@@ -528,7 +526,7 @@ module prime_machin::mint {
     ) {
         assert!(cap.mint_id == object::id(mint), EInvalidRevealMintCapForMint);
 
-        image::verify_image_chunks_registered(&image);
+        image.verify_image_chunks_registered();
 
         let pfp = mint.pfp.borrow_mut();
 

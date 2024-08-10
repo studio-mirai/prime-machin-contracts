@@ -9,10 +9,6 @@ module prime_machin::registry {
     use prime_machin::admin::AdminCap;
     use prime_machin::collection;
 
-    // === Friends ===
-
-    /* friend prime_machin::factory; */
-
     public struct REGISTRY has drop {}
 
     /// Stores a Prime Machin number: to ID mapping.

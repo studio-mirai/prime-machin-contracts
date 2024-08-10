@@ -16,12 +16,6 @@ module prime_machin::factory {
     use prime_machin::rarity::{Rarity};
     use prime_machin::registry::{Self, Registry};
 
-    // === Friends ===
-
-    /* friend prime_machin::coloring; */
-    /* friend prime_machin::mint; */
-    /* friend prime_machin::receive; */
-
     // === Errors ===
 
     const EAttributesAlreadySet: u64 = 1;

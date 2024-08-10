@@ -4,11 +4,6 @@ module prime_machin::attributes {
 
     use std::string::String;
 
-    // === Friends ===
-
-    /* friend prime_machin::mint; */
-    /* friend prime_machin::factory; */
-
     // === Structs ===
 
     /// An object that holds a `AttributesData` object,

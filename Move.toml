@@ -5,10 +5,9 @@ edition = "2024.beta"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/mainnet" }
-# Koto = { local = "./../koto-move" }
+Koto = { git = "https://github.com/mirai-labs/koto-move.git", rev = "main" }
 
 [addresses]
-koto = "0x0"
 prime_machin = "0x0"
 sm_api = "0x597996d64570b1ba7ec02376995fe126d4430d385a62970f33266d7eb711172f"
 sm_treasury = "0xde0053243f3226649701a7fe2c3988be11941bf3ff3535f3c8c5bf32fc600220"

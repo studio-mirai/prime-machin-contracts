@@ -1,14 +1,4 @@
 module prime_machin::admin {
-    // === Friends ===
-
-    /* friend prime_machin::attributes; */
-    /* friend prime_machin::coloring; */
-    /* friend prime_machin::image; */
-    /* friend prime_machin::mint; */
-    /* friend prime_machin::factory; */
-    /* friend prime_machin::rarity; */
-    /* friend prime_machin::receive; */
-    /* friend prime_machin::registry; */
 
     // === Errors ===
 

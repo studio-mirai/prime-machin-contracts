@@ -1,10 +1,5 @@
 module prime_machin::collection {
 
-    // === Friends ===
-
-    /* friend prime_machin::factory; */
-    /* friend prime_machin::registry; */
-
     // === Constants ===
 
     const COLLECTION_SIZE: u16 = 3333;

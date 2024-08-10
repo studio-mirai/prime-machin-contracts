@@ -1,9 +1,8 @@
 module prime_machin::collab_royalty_rule {
 
-    use sui::table::{Self, Table};
-
     use sui::sui::SUI;
     use sui::coin::{Self, Coin};
+    use sui::table::{Self, Table};
     use sui::transfer_policy::{
         Self as policy,
         TransferPolicy,

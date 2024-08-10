@@ -14,12 +14,6 @@ module prime_machin::image {
     use sui::vec_map::{Self, VecMap};
     use sui::vec_set::{Self, VecSet};
 
-    // === Friends ===
-
-    /* friend prime_machin::coloring; */
-    /* friend prime_machin::mint; */
-    /* friend prime_machin::factory; */
-
     // === Errors ===
 
     const EImageChunkHashMismatch: u64 = 1;
@@ -231,7 +225,7 @@ module prime_machin::image {
         };
 
         // Grab a reference to the concatenated string's underlying bytes.
-        let concat_chunk_bytes = concat_chunk_str.bytes();
+        let concat_chunk_bytes = concat_chunk_str.as_bytes();
 
         // Calculate a SHA-256 hash of the concatenated string.
         let chunk_hash_bytes = hash::sha2_256(*concat_chunk_bytes);

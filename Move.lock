@@ -1,6 +1,6 @@
 
 [move]
-manifest_digest = "DFCCD0648690D335C1C592FDBE68E50FD6E6FDD92608BE67A304DB0CDAA7925D"
+manifest_digest = "46963749C976A052F2770EA6625F4DF4366F72291DC73139750BC416CF77A247"
 deps_digest = "3C4103934B1E040BB6B23F1D610B4EF9F2F1166A50A104EADCF77467C004C600"
 dependencies = [
   { name = "Koto" },
@@ -9,7 +9,7 @@ dependencies = [
 
 [[move.package]]
 name = "Koto"
-source = { local = "../koto-move" }
+source = { git = "https://github.com/mirai-labs/koto-move.git", rev = "main", subdir = "" }
 
 dependencies = [
   { name = "Sui" },
@@ -28,6 +28,6 @@ dependencies = [
 ]
 
 [move.toolchain-version]
-compiler-version = "1.22.0"
-edition = "legacy"
+compiler-version = "1.30.1"
+edition = "2024.beta"
 flavor = "sui"
